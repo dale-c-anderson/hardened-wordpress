@@ -4,7 +4,7 @@
 function main() {
   set_variables
   check_prerequisites
-  show_disclaimer
+  echo "This script is intended to remove Wordpress's ability to modify itself. This includes removing the ability to automatically update, removing the ability to update themes and modules from the admin section, and removing the ability to edit any files via the admin section."
   place_htaccess_files
   disallow_file_edit
   info "All done. You should now run fix-wordpress-permissions.sh"
@@ -21,31 +21,41 @@ function set_variables() {
 
 function check_prerequisites() {
   require_wp_structure
-  require_script "curl"
-  require_script "diff"
-}
-
-function show_disclaimer() {
-  DISCLAIMER="This script is intended to remove Wordpress's ability to modify itself. This includes removing the ability to automatically update, removing the ability to update themes / modules from the admin section, and removing the ability to edit any files via the admin section."
-  if is_interactive_shell; then
-    confirm "$DISCLAIMER Enter 'y' to continue, or anything else to abort: "
-  else
-    info "$DISCLAIMER"
-  fi
+  require_script "/usr/bin/curl"
+  require_script "/usr/bin/cmp"
+  require_script "/usr/bin/tee"
 }
 
 function place_htaccess_files() {
   for DIR in / /wp-admin/ /wp-content/ /wp-includes/; do
-    SRC="${REPO_SRC}${DIR}.htaccess"
-    DEST="${WWWROOT}${DIR}.htaccess"
-    download "${SRC}" "${DEST}"
+    local TEMPFILE="$(mktemp)"
+    local SRC="${REPO_SRC}${DIR}.htaccess"
+    local DEST="${WWWROOT}${DIR}.htaccess"
+    download "$SRC" "$TEMPFILE"
+    MOVE=0
+    if test -e "${DEST}"; then
+      if cmp -s "$TEMPFILE" "$DEST"; then
+        info "Skipping $DEST (already hardened)"
+      else
+        if confirm "Replace ${DEST}? (a backup will be made) [y/N]: "; then
+          MOVE=1
+        fi
+      fi
+    else
+      MOVE=1
+    fi
+    if [ $MOVE -eq 1 ]; then
+      back_up_in_place "${DEST}"
+      mv -v "${TEMPFILE}" "${DEST}"
+    else
+      rm "${TEMPFILE}"
+    fi
   done
 }
 
 function download() {
-  SRC="${1}"
-  DEST="${2}"
-  back_up "${DEST}"
+  local SRC="${1}"
+  local DEST="${2}"
   curl --silent "${SRC}" > "${DEST}"
   info "${SRC} -> ${DEST}"
 }
@@ -60,29 +70,33 @@ function is_interactive_shell() {
 
 function disallow_file_edit() {
   DEFINE_DISALLOW="define('DISALLOW_FILE_EDIT', true);"
-  if grep "^${DEFINE_DISALLOW}" "${WP_CONFIG}"; then
-    : # It's already present.
+  if grep --quiet "^${DEFINE_DISALLOW}" "${WP_CONFIG}"; then
+    info "Wp-config.php already disallows file editing."
   else
-    back_up "${WP_CONFIG}"
-    echo "${DEFINE_DISALLOW}" >> "${WP_CONFIG}"
+    if confirm "Add DEFINE_DISALLOW to wp-config.php? (a backup will be made) [y/N]: "; then
+      back_up_to_home "${WP_CONFIG}"
+      echo "${DEFINE_DISALLOW}" >> "${WP_CONFIG}"
+      info "\"${DEFINE_DISALLOW}\" >> ${WP_CONFIG}"
+    fi
   fi
 }
 
 function confirm () {
   echo -n "$@"
   read -r CONFIRMATION
-  if [[ "${CONFIRMATION}" != 'y' ]]; then
-    echo "Aborting."
+  if [[ "${CONFIRMATION}" == 'y' ]]; then
+    true
+  else
     false
   fi
 }
 
-function back_up() {
-  WHAT="$1"
-  BACKUPS="$HOME/backups"
+function back_up_to_home() {
+  local WHAT="$1"
+  local BACKUPS="$HOME/backups"
   test -d "${BACKUPS}" || (umask 077 && mkdir -v "${BACKUPS}")
   if test -e "$WHAT"; then
-    BAKFILE="${BACKUPS}/$(basename "${WHAT}").$(date +%s).tar"
+    local BAKFILE="${BACKUPS}/$(basename "${WHAT}").$(date +%s).tar"
     info "Backing up '${WHAT}' to '${BAKFILE}'"
     if test -e "$BAKFILE"; then
       tar --append --file "$BAKFILE" "$WHAT"
@@ -91,6 +105,16 @@ function back_up() {
     fi
   fi
 }
+
+function back_up_in_place() {
+  local WHAT="$1"
+  if test -e "$WHAT"; then
+    # It only makes sense to back up the file if actually exists!
+    local BAKFILE="${WHAT}.$(date +%s.%N)~"
+    cp -av "$WHAT" "$BAKFILE"
+  fi
+}
+
 
 function require_wp_structure() {
   ERRORS=0
@@ -113,15 +137,17 @@ function require_wp_structure() {
 
 
 function require_script () {
-  type "$1" > /dev/null  2>&1 || {
-    err "The following is not installed or not in path: $1"
+  local WHAT="$1"
+  type "$WHAT" > /dev/null  2>&1 || {
+    err "The following is not installed or not in path: $WHAT"
     abort
   }
 }
 
 function require_package () {
-  type "$1" > /dev/null  2>&1 || {
-    apt-get -y install "$1" || yum -y install "$1"
+  local WHAT="$1"
+  type "$WHAT" > /dev/null  2>&1 || {
+    apt-get -y install "$WHAT" || yum -y install "$WHAT"
   }
 }
 
