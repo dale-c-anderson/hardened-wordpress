@@ -48,16 +48,16 @@ satisfy all
   </IfModule>
 </FilesMatch>
 
-## Uncomment to prevent direct linking of images -- change YOUR_DOMAIN_NAME to your own domain; can be partial match
+## Change YOUR_DOMAIN_NAME\.com to your real domain name and uncomment to prevent direct linking of images.
 #RewriteEngine on
 #RewriteCond %{HTTP_REFERER} !^$
-#RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?YOUR_DOMAIN_NAME [NC]
+#RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?YOUR_DOMAIN_NAME\.com [NC]
 #RewriteRule \.(jpg|jpeg|png|gif)$ - [NC,F,L]
 
-## Uncomment to restrict access to login by IP
+## Change X.X.X.X to your IP and uncomment to restrict access to login page
 #<files wp-login.php>
 #  order deny,allow
-#  allow from 254.254.254.254
+#  allow from X.X.X.X
 #  deny from all
 #</files>
 
