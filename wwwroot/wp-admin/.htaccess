@@ -1,0 +1,4 @@
+## Uncomment to restrict access to /wp-admin by IP address
+#order deny,allow
+#allow from 254.254.254.254
+#deny from all

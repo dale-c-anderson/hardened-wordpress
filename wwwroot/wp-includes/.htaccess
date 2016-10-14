@@ -1,0 +1,28 @@
+<FilesMatch "\.(?i:php)$">
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+</FilesMatch>
+
+<Files wp-tinymce.php>
+  <IfModule !mod_authz_core.c>
+    Allow from all
+  </IfModule>
+  <IfModule mod_authz_core.c>
+    Require all granted
+  </IfModule>
+</Files>
+
+## Uncomment if you have a multisite installation
+# <Files ms-files.php>
+#  <IfModule !mod_authz_core.c>
+#    Allow from all
+#  </IfModule>
+#  <IfModule mod_authz_core.c>
+#    Require all granted
+#  </IfModule>
+# </Files>
