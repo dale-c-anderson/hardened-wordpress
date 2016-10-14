@@ -32,7 +32,6 @@ Run them from the base of your WP install.
   - Backs up anything it overwrites to your home dir 
   - Adds the `DISALLOW_FILE_EDIT` directive to wp-config.php
   - Is verbose about what it does
-  - Run from a command line using: `wget -q -O - https://raw.githubusercontent.com/dale-c-anderson/hardened-wordpress/master/harden-wordpress.sh| bash`
 - `fix-wordpress-perissions.sh`:
   - Helps you reset all the permissions so Wordpress can only write to the `/wp-content/uploads` directory
 
