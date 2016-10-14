@@ -4,37 +4,42 @@
 function main() {
   set_variables
   check_prerequisites
-  DISCLAIMER="This script is intended to remove Wordpress's ability to modify itself. This includes removing the ability to automatically update, removing the ability to update themes / modules from the admin section, and removing the ability to edit any files via the admin section."
-  if is_interactive_shell; then
-    confirm "$DISCLAIMER Enter 'y' to continue, or anything else to abort: "
-  else
-    info "$DISCLAIMER"
-  fi
-  download "$HTACCESS_WP_ROOT_SRC" "$HTACCESS_WP_ROOT_DEST"
-  download "$HTACCESS_WP_CONTENT_SRC" "$HTACCESS_WP_CONTENT_DEST"
+  show_disclaimer
+  place_htaccess_files
+  disallow_file_edit
   info "All done. You should now run fix-wordpress-permissions.sh"
 }
 
 function set_variables() {
   # If you're not running the script from your web root, export the value of WWWROOT before running this script.
-  : "${WWWROOT:="."}"
-
+  : "${WWWROOT:="$PWD"}"
   WP_CONFIG="${WWWROOT}/wp-config.php"
   WP_CONTENT="${WWWROOT}/wp-content"
   WP_UPLOADS="${WP_CONTENT}/uploads"
-
-  HTACCESS_WP_ROOT_SRC="https://raw.githubusercontent.com/dale-c-anderson/hardened-wordpress/master/wwwroot/.htaccess"
-  HTACCESS_WP_ROOT_DEST="${WWWROOT}/.htaccess"
-
-  HTACCESS_WP_CONTENT_SRC="https://raw.githubusercontent.com/dale-c-anderson/hardened-wordpress/master/wwwroot/wp-content/.htaccess"
-  HTACCESS_WP_CONTENT_DEST="${WP_CONTENT}/.htaccess"
-
+  REPO_SRC="https://raw.githubusercontent.com/dale-c-anderson/hardened-wordpress/master/wwwroot"
 }
 
 function check_prerequisites() {
   require_wp_structure
   require_script "curl"
   require_script "diff"
+}
+
+function show_disclaimer() {
+  DISCLAIMER="This script is intended to remove Wordpress's ability to modify itself. This includes removing the ability to automatically update, removing the ability to update themes / modules from the admin section, and removing the ability to edit any files via the admin section."
+  if is_interactive_shell; then
+    confirm "$DISCLAIMER Enter 'y' to continue, or anything else to abort: "
+  else
+    info "$DISCLAIMER"
+  fi
+}
+
+function place_htaccess_files() {
+  for DIR in / /wp-admin/ /wp-content/ /wp-includes/; do
+    SRC="${REPO_SRC}${DIR}.htaccess"
+    DEST="${WWWROOT}${DIR}.htaccess"
+    download "${SRC}" "${DEST}"
+  done
 }
 
 function download() {
@@ -46,13 +51,22 @@ function download() {
 }
 
 function is_interactive_shell() {
-  if [[ $- == *i* ]]; then
+  if [ -t 1 ] ; then 
     true
   else
     false
   fi
 }
 
+function disallow_file_edit() {
+  DEFINE_DISALLOW="define('DISALLOW_FILE_EDIT', true);"
+  if grep "^${DEFINE_DISALLOW}" "${WP_CONFIG}"; then
+    : # It's already present.
+  else
+    back_up "${WP_CONFIG}"
+    echo "${DEFINE_DISALLOW}" >> "${WP_CONFIG}"
+  fi
+}
 
 function confirm () {
   echo -n "$@"
@@ -65,8 +79,16 @@ function confirm () {
 
 function back_up() {
   WHAT="$1"
+  BACKUPS="$HOME/backups"
+  test -d "${BACKUPS}" || (umask 077 && mkdir -v "${BACKUPS}")
   if test -e "$WHAT"; then
-    cp -av "$WHAT" "$WHAT.$(date +%s).bak"
+    BAKFILE="${BACKUPS}/$(basename "${WHAT}").$(date +%s).tar"
+    info "Backing up '${WHAT}' to '${BAKFILE}'"
+    if test -e "$BAKFILE"; then
+      tar --append --file "$BAKFILE" "$WHAT"
+    else
+      (umask 077 && tar --create --file "$BAKFILE" "$WHAT")
+    fi
   fi
 }
 
