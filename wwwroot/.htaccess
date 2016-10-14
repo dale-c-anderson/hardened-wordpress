@@ -36,3 +36,29 @@ order allow,deny
 deny from all
 satisfy all
 </files>
+
+# Files types which probably don't ever need to be accessed on production machines
+<FilesMatch "\.(engine|inc|install|make|module|profile|po|sh|.*sql|theme|twig|tpl(\.php)?|xtmpl|yml)(~|\.sw[op]|\.bak|\.orig|\.save)?$|^(\.(?!well-known).*|Entries.*|Repository|Root|Tag|Template|composer\.(json|lock))$|^#.*#$|\.php(~|\.sw[op]|\.bak|\.orig|\.save)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    deny from all
+  </IfModule>
+</FilesMatch>
+
+## Uncomment to prevent direct linking of images -- change YOUR_DOMAIN_NAME to your own domain; can be partial match
+#RewriteEngine on
+#RewriteCond %{HTTP_REFERER} !^$
+#RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?YOUR_DOMAIN_NAME [NC]
+#RewriteRule \.(jpg|jpeg|png|gif)$ - [NC,F,L]
+
+## Uncomment to restrict access to login by IP
+#<files wp-login.php>
+#  order deny,allow
+#  allow from 254.254.254.254
+#  deny from all
+#</files>
+
+
