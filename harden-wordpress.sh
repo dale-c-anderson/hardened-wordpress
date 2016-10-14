@@ -4,7 +4,7 @@
 function main() {
   set_variables
   check_prerequisites
-  confirm "This script is intended to remove Wordpress's ability to modify itself. This includes removing the ability to automatically update, removing the ability to update themes / modules from the admin section, and removing the ability to edit any files via the admin section. Enter 'y' to continue, or anything else to abort: " || abort
+  confirm "This script is intended to remove Wordpress's ability to modify itself. This includes removing the ability to automatically update, removing the ability to update themes / modules from the admin section, and removing the ability to edit any files via the admin section. Enter 'y' to continue, or anything else to abort: "
   download "$HTACCESS_WP_ROOT_SRC" "$HTACCESS_WP_ROOT_DEST"
   download "$HTACCESS_WP_CONTENT_SRC" "$HTACCESS_WP_CONTENT_DEST"
   info "All done. You should now run fix-wordpress-permissions.sh"
@@ -44,8 +44,8 @@ function confirm () {
   echo -n "$@"
   read -r CONFIRMATION
   if [[ "${CONFIRMATION}" != 'y' ]]; then
+    echo "Aborting."
     false
-    return
   fi
 }
 
