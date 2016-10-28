@@ -104,11 +104,11 @@ function guess_group_owner() {
   elif test -e "/etc/nginx/conf.d"; then
     # red hat style
     VHOSTFILE="$(grep -l "$PWD" /etc/nginx/conf.d/*)"
-    DEFAULT_GROUP="apache2"
+    DEFAULT_GROUP="apache"
   elif test -e "/etc/httpd/conf.d"; then
     # red hat style
     VHOSTFILE="$(grep -l "$PWD" /etc/httpd/conf.d/*)"
-    DEFAULT_GROUP="apache2"
+    DEFAULT_GROUP="apache"
   else
     info "guess_group_owner(): Could not find a virtual host configuration directory. Falling back to default."
     echo -n "${FALLBACK_GROUP}"
