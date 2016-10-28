@@ -59,13 +59,16 @@ function get_group() {
 }
 
 function fix_permissions() {
-  confirm "Ready to reset all permissions in $WWWROOT to [$CORRECT_OWNER:$CORRECT_GROUP]? Enter 'y' to continue, anything else to abort: " || abort
+  
+  # @TODO: Make option to do 644/755/2755 or 640/750/2755.
+  
+  confirm "Ready to reset all permissions in ${WWWROOT}? Enter 'y' to continue, anything else to abort: " || abort
 
   info "Resetting file permissions on ${WWWROOT}"
-  find "${WWWROOT}" -type f -exec chmod 640 {} \;
+  find "${WWWROOT}" -type f -exec chmod 644 {} \;
 
   info "Resetting directory permissions on ${WWWROOT}"
-  find "${WWWROOT}" -type d -exec chmod 750 {} \;
+  find "${WWWROOT}" -type d -exec chmod 755 {} \;
 
   info "Resetting ownership on ${WWWROOT}"
   chown -R "$CORRECT_OWNER:$CORRECT_GROUP" "${WWWROOT}"
@@ -74,7 +77,7 @@ function fix_permissions() {
   chmod -R g+w "${WP_UPLOADS}"
 
   info "Applying setgid bit to directories of ${WP_UPLOADS}"
-  find "${WP_UPLOADS}" -type d -exec chmod 2750 {} \;
+  find "${WP_UPLOADS}" -type d -exec chmod 2755 {} \;
 
   info "All done."
 
