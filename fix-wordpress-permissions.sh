@@ -60,7 +60,8 @@ function get_group() {
 
 function fix_permissions() {
   
-  # @TODO: Make option to do 644/755/2755 or 640/750/2755.
+  # @TODO: Make option to choose either 644/755/2775 or 640/750/2770.
+  
   echo "Ready to reset all permissions and ownership in ${WWWROOT}?"
   echo ""
   confirm "Enter 'y' to continue, anything else to abort: " || abort
@@ -81,7 +82,7 @@ function fix_permissions() {
   chmod -R g+w "${WP_UPLOADS}"
 
   info "Applying setgid bit to directories of ${WP_UPLOADS}"
-  find "${WP_UPLOADS}" -type d -exec chmod 2755 {} \;
+  find "${WP_UPLOADS}" -type d -exec chmod 2775 {} \;
 
   info "All done."
 
