@@ -61,8 +61,8 @@ function get_group() {
 function fix_permissions() {
   
   # @TODO: Make option to do 644/755/2755 or 640/750/2755.
-  
-  confirm "Ready to reset all permissions and ownership in ${WWWROOT}? Enter 'y' to continue, anything else to abort: " || abort
+  echo "Ready to reset all permissions and ownership in ${WWWROOT}?"
+  confirm "Enter 'y' to continue, anything else to abort: " || abort
 
   info "Resetting file permissions on ${WWWROOT}"
   find "${WWWROOT}" -type f -exec chmod 644 {} \;
