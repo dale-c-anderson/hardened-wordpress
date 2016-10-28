@@ -62,6 +62,7 @@ function fix_permissions() {
   
   # @TODO: Make option to do 644/755/2755 or 640/750/2755.
   echo "Ready to reset all permissions and ownership in ${WWWROOT}?"
+  echo ""
   confirm "Enter 'y' to continue, anything else to abort: " || abort
 
   info "Resetting file permissions on ${WWWROOT}"
