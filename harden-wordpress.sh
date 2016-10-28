@@ -47,6 +47,7 @@ function place_htaccess_files() {
     if [ $MOVE -eq 1 ]; then
       back_up_in_place "${DEST}"
       mv -v "${TEMPFILE}" "${DEST}"
+      chmod 644 "${DEST}" # If we dont do this, the web server won't be able to read it.
     else
       rm "${TEMPFILE}"
     fi
