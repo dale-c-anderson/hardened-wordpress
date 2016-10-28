@@ -62,7 +62,7 @@ function fix_permissions() {
   
   # @TODO: Make option to do 644/755/2755 or 640/750/2755.
   
-  confirm "Ready to reset all permissions in ${WWWROOT}? Enter 'y' to continue, anything else to abort: " || abort
+  confirm "Ready to reset all permissions and ownership in ${WWWROOT}? Enter 'y' to continue, anything else to abort: " || abort
 
   info "Resetting file permissions on ${WWWROOT}"
   find "${WWWROOT}" -type f -exec chmod 644 {} \;
@@ -71,7 +71,10 @@ function fix_permissions() {
   find "${WWWROOT}" -type d -exec chmod 755 {} \;
 
   info "Resetting ownership on ${WWWROOT}"
-  chown -R "$CORRECT_OWNER:$CORRECT_GROUP" "${WWWROOT}"
+  chown -R "$CORRECT_OWNER:" "${WWWROOT}"
+
+  info "Resetting ownership on ${WP_UPLOADS}"
+  chown -R "$CORRECT_OWNER:$CORRECT_GROUP" "${WP_UPLOADS}"
 
   info "Giving ${CORRECT_GROUP} write access to ${WP_UPLOADS}"
   chmod -R g+w "${WP_UPLOADS}"
